@@ -32,3 +32,19 @@ a plugin registry, a bundled `PdfTableExtractor` (uses `pdfplumber`), a
   collapses whitespace per cell. Keep that in mind when asserting exact strings.
 - The reference plugin only claims `*.pdf` sources (`can_handle`). Registering a
   second plugin with the same `name` raises `ValueError` by design.
+
+### Inventory breakdown
+
+- `pdfextract <pdf> --inventory` aggregates extracted rows into a
+  project → floor → room → item quantity hierarchy (see `inventory.py` and
+  `inventory_report.py`). Programmatic entry points: `build_inventory()` /
+  `format_inventory()`.
+- Columns are auto-detected from the header via `FIELD_KEYWORDS` in
+  `inventory.py`; add synonyms there if a document uses unusual header names, or
+  pass `--floor-col/--room-col/--item-col/--qty-col/--unit-col` (name or index).
+- Inventory output formats are `text` (default), `csv`, `json` — distinct from
+  the table-mode formats (`csv`/`tsv`/`json`/`markdown`). The CLI validates the
+  `--format` value against the active mode.
+- Rows with a blank floor/room inherit the last non-blank value above them, so
+  "section header" style layouts (label only on the first row) aggregate
+  correctly. Items are summed per (name, unit); differing units stay separate.

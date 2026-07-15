@@ -41,6 +41,49 @@ Widget A,3,$10.00,$30.00
 Widget B,5,$7.50,$37.50
 ```
 
+## Inventory breakdown (by floor & room)
+
+For interior / architectural documents (customer requirement sheets, room
+schedules, furniture & fixture lists), `--inventory` interprets the extracted
+rows as *item quantities* and aggregates them into a hierarchy:
+
+```
+Project
+  └─ Floor
+       └─ Room
+            └─ Item -> total quantity (+ unit)
+```
+
+```bash
+pdfextract schedule.pdf --inventory              # indented summary (default)
+pdfextract schedule.pdf --inventory -f csv       # flat, spreadsheet-friendly
+pdfextract schedule.pdf --inventory -f json      # nested hierarchy
+```
+
+Columns (floor / room / item / quantity / unit) are **auto-detected** from the
+header using keyword synonyms (e.g. `Level`→floor, `Space`→room, `Material`→item,
+`Nos`→quantity, `UOM`→unit). Override any of them explicitly:
+
+```bash
+pdfextract schedule.pdf --inventory \
+    --floor-col Level --room-col Space --item-col Material --qty-col Nos --unit-col UOM
+```
+
+You also get per-room subtotals, per-floor subtotals, and project-wide totals
+(items with the same name are summed across rooms/floors; different units are
+kept separate). Programmatic use:
+
+```python
+from pdfextract import extract, build_inventory, format_inventory
+
+project = build_inventory(extract("schedule.pdf"))
+print(format_inventory(project, "text"))     # text | csv | json
+for floor in project.floors:
+    for room in floor.rooms:
+        for item in room.items:
+            print(floor.floor, room.room, item.name, item.quantity, item.unit)
+```
+
 ## Python API
 
 ```python

@@ -13,6 +13,15 @@ from __future__ import annotations
 from .core import ExtractionResult, Table
 from .extractor import PdfTableExtractor
 from .formatters import FORMATS, format_result, format_table
+from .inventory import (
+    ColumnMapping,
+    InventoryItem,
+    ProjectInventory,
+    aggregate,
+    build_inventory,
+    build_line_items,
+)
+from .inventory_report import INVENTORY_FORMATS, format_inventory
 from .plugin import (
     ExtractionPlugin,
     PluginRegistry,
@@ -34,15 +43,23 @@ def extract(source: str, *, plugin: str | None = None, **options) -> ExtractionR
 
 
 __all__ = [
+    "FORMATS",
+    "INVENTORY_FORMATS",
+    "ColumnMapping",
     "ExtractionPlugin",
     "ExtractionResult",
-    "FORMATS",
+    "InventoryItem",
     "PdfTableExtractor",
     "PluginRegistry",
+    "ProjectInventory",
     "Table",
     "__version__",
+    "aggregate",
+    "build_inventory",
+    "build_line_items",
     "default_registry",
     "extract",
+    "format_inventory",
     "format_result",
     "format_table",
     "register",
