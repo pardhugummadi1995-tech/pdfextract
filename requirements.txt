@@ -1,0 +1,4 @@
+# Runtime dependencies for the pdfextract plugin.
+# For development (tests, linting, building) install the extras instead:
+#   pip install -e ".[dev]"
+pdfplumber>=0.11.0
