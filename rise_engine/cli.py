@@ -68,6 +68,14 @@ def main(argv=None) -> int:
     os.makedirs(args.out, exist_ok=True)
     base = os.path.splitext(os.path.basename(args.pdf))[0]
 
+    if not model.recognized:
+        print(
+            f"WARNING: could not extract a Material Indent from '{model.source}'.\n"
+            f"  {model.recognition_note}",
+            file=sys.stderr,
+        )
+        return 3
+
     # --- Review-before-export workflow ---
     if args.apply_review:
         if not os.path.exists(args.apply_review):

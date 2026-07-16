@@ -87,6 +87,25 @@ def build_project(pages, source: str | None = None) -> ProjectModel:
     for m in unknown:
         warnings.append(f"Quantity verification required: {m.description}.")
 
+    # Recognition check: did we actually find hardware-schedule tables? If not,
+    # signal loudly rather than returning a misleading empty indent.
+    total_text = sum(getattr(p, "text_len", 0) for p in pages)
+    recognized = bool(cabinets)
+    recognition_note = ""
+    if not recognized:
+        if total_text < 200:
+            recognition_note = (
+                "No extractable text found — the PDF is likely scanned/image-only. "
+                "This engine needs a text-based SOD (no OCR)."
+            )
+        else:
+            recognition_note = (
+                "No hardware-schedule tables were recognised — the PDF may use a "
+                "different template. Expected ruled columns: "
+                "Cabinet Code | Carcass | Shutter | Sizes | Hardware Details."
+            )
+        warnings.insert(0, recognition_note)
+
     return ProjectModel(
         source=source,
         page_count=len(pages),
@@ -97,6 +116,8 @@ def build_project(pages, source: str | None = None) -> ProjectModel:
         finish_legend=finish_legend,
         warnings=warnings,
         unknown_items=unknown,
+        recognized=recognized,
+        recognition_note=recognition_note,
     )
 
 

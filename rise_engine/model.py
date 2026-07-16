@@ -89,3 +89,7 @@ class ProjectModel:
     warnings: list[str] = field(default_factory=list)
     unknown_items: list[IndentLine] = field(default_factory=list)
     reviewed: bool = False
+    # True when at least one hardware schedule table was recognised. When False,
+    # the PDF is likely scanned or uses an unsupported template.
+    recognized: bool = True
+    recognition_note: str = ""

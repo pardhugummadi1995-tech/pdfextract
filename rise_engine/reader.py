@@ -24,6 +24,7 @@ class PageExtract:
     cabinet_rows: list[dict] = field(default_factory=list)
     electrical_points: set = field(default_factory=set)
     plumbing_points: set = field(default_factory=set)
+    text_len: int = 0
 
 
 def read_sod(path: str) -> list[PageExtract]:
@@ -48,6 +49,7 @@ def read_sod(path: str) -> list[PageExtract]:
                     cabinet_rows=cabinet_rows,
                     electrical_points=electrical,
                     plumbing_points=plumbing,
+                    text_len=len(text.strip()),
                 )
             )
     return pages

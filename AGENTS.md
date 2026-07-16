@@ -34,4 +34,11 @@ Indent for RISE ERP. No cloud, no OCR, no AI.
 - Tests generate their own ruled-table SOD via `samples/generate_sample_sod.py`
   (needs `reportlab`); keep table `colWidths` within the page text area or
   pdfplumber will interleave adjacent cells.
+- Recognition guard: `build_project` sets `recognized=False` (and the CLI exits
+  `3`) when no schedule table is found — distinguishing a likely scanned PDF
+  (no text) from an unsupported template. Don't remove this; it prevents silent
+  empty/wrong indents on non-conforming uploads.
+- Electrical/plumbing points come from `services.py` (legend-gated `EE/NE/SE`,
+  `EP/NP/SP` codes). Review workflow: `--review` → edit `Approved Qty` →
+  `--apply-review` (`review.py`).
 - Do **not** commit customer SOD PDFs.

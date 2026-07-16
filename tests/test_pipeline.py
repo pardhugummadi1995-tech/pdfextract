@@ -60,6 +60,29 @@ def test_dedup_same_cabinet_across_pages_keeps_richer():
     assert hinge.total_qty == 10  # not double counted
 
 
+def test_unrecognized_scanned_pdf():
+    # No text and no schedules -> looks scanned.
+    model = build_project([PageExtract(page_number=1, text_len=0)], source="scan.pdf")
+    assert model.recognized is False
+    assert "scanned" in model.recognition_note.lower()
+    assert model.warnings and model.warnings[0] == model.recognition_note
+
+
+def test_unrecognized_wrong_template():
+    # Plenty of text but no schedule table -> unsupported template.
+    model = build_project([PageExtract(page_number=1, text_len=5000)], source="other.pdf")
+    assert model.recognized is False
+    assert "template" in model.recognition_note.lower()
+
+
+def test_recognized_when_schedule_present():
+    model = build_project(
+        [_page(9, "Kitchen", [_row("B1", "1. Hettich Onsys 105° Hinges -4Nos")])],
+    )
+    assert model.recognized is True
+    assert model.recognition_note == ""
+
+
 def test_finish_indent_and_dimension_warning():
     pages = [
         _page(1, "Kitchen", [

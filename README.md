@@ -46,8 +46,19 @@ Open the generated `*-report.html` in any browser for the preview.
 3. **Room summary** — cabinets, hardware lines, estimated inventory per room.
 4. **Category counts** — rooms, cabinets, hardware types, hardware qty, finishes.
 
+## When it works
+
+The engine reads **only the inventory** — it never interprets the sketches. It
+works when the PDF is **text-based** (not scanned) and uses the ruled
+`Cabinet Code | Carcass | Shutter | Sizes | Hardware Details` schedule tables.
+For a different firm's template or a scanned/image PDF it will not extract; in
+that case it does **not** emit a misleading empty indent — it reports
+`recognized = False`, prints a clear reason, and the CLI exits with code `3`.
+Keep uploads on a consistent SOD template for consistent results.
+
 ## Error handling / flags
 
+- Unsupported/scanned PDF → **not recognised** (clear message, CLI exit code 3).
 - Missing dimensions → cabinet flagged **Dimension Missing**.
 - Missing quantity → item flagged **Quantity Verification Required**.
 - Handles/appliances noted "In Client Scope" → flagged **Client Scope**.
