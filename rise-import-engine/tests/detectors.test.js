@@ -48,6 +48,16 @@ test("detectCabinets matches codes and explicit labels", () => {
   assert.deepEqual(codes, ["B1", "WR1", "TV1"]);
 });
 
+test("detectCabinets ignores hardware lines that look like a code (e.g. POM40)", () => {
+  const lines = mkLines([
+    "WR2 Wardrobe",
+    "POM40 4 Nos", // hardware item, not a cabinet
+    "Hettich 105 Hinge 6 Nos",
+  ]);
+  const codes = detectCabinets(lines).map((c) => c.code);
+  assert.deepEqual(codes, ["WR2"]);
+});
+
 test("detectDimensions parses WxDxH", () => {
   const dim = detectDimensions(mkLines(["B1 Base Unit 600 x 580 x 850"]));
   assert.deepEqual(dim, { width: 600, depth: 580, height: 850, raw: "600 x 580 x 850" });

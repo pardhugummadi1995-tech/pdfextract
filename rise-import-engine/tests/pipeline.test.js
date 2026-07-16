@@ -23,6 +23,7 @@ function buildModel() {
     "Hettich 105 Hinge 10 Nos",
     "Multipurpose Lock 1 No",
     "WR2 Wardrobe",
+    "POM40 4 Nos",
     "Mystery Gadget X 2 Nos",
     "Soft Close Mechanism",
   ]);
@@ -75,6 +76,15 @@ test("unknown items and qty-verification are surfaced", () => {
   const soft = m.materialIndent.find((i) => i.description === "Soft Close Mechanism");
   assert.equal(soft.totalQty, null);
   assert.ok(soft.flags.includes("Quantity Verification Required"));
+});
+
+test("POM40 is captured as hardware, not a spurious cabinet", () => {
+  const m = buildModel();
+  assert.equal(m.rooms[1].cabinets.length, 2); // WR1, WR2 only
+  const pom = m.materialIndent.find((i) => i.description === "POM40");
+  assert.ok(pom, "POM40 should appear in the material indent");
+  assert.equal(pom.category, "Hardware");
+  assert.equal(pom.totalQty, 4);
 });
 
 test("validation counts are consistent", () => {

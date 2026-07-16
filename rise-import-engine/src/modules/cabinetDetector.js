@@ -7,7 +7,7 @@
  * and/or dimensions). Pure module.
  */
 
-import { CABINET_CODE_RE } from "../constants.js";
+import { CABINET_CODE_RE, QTY_UNIT_RE } from "../constants.js";
 
 /**
  * @param {Array} lines parsed lines (reading order)
@@ -30,6 +30,11 @@ export function detectCabinets(lines) {
       });
       return;
     }
+
+    // A hardware line can start with a token that looks like a cabinet code
+    // (e.g. "POM40 4 Nos"). Cabinet headers never carry a quantity + unit, so
+    // skip anything that reads as a hardware line.
+    if (QTY_UNIT_RE.test(text)) return;
 
     const first = text.split(/\s+/)[0];
     if (CABINET_CODE_RE.test(first)) {
