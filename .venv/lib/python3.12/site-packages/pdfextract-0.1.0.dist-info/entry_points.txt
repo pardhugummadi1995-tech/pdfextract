@@ -1,0 +1,5 @@
+[console_scripts]
+pdfextract = pdfextract.cli:main
+
+[pdfextract.plugins]
+pdf_table = pdfextract.extractor:PdfTableExtractor
