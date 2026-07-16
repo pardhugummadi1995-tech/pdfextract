@@ -1,27 +1,13 @@
-# Python
-__pycache__/
-*.py[cod]
-*.egg-info/
-*.egg
-build/
-dist/
-.eggs/
+# Node
+node_modules/
 
-# Virtual environments
+# Python (only used by the optional sample-fixture generator)
 .venv/
 venv/
-env/
-
-# Test / tooling caches
-.pytest_cache/
-.ruff_cache/
-.coverage
-htmlcov/
+__pycache__/
+*.py[cod]
 
 # Editor / OS
 .DS_Store
 *.swp
-
-# Local scratch output
-*.out.csv
-/tmp_output/
+*.log

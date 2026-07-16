@@ -1,0 +1,4 @@
+# Optional dev-only dependency: used solely to regenerate the sample SOD fixture
+# via `python samples/generate_sample.py`. The app itself has no Python or npm
+# runtime dependencies (PDF.js is vendored; tests use Node's built-in runner).
+reportlab>=4.0
