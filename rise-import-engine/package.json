@@ -1,0 +1,13 @@
+{
+  "name": "rise-project-import-engine",
+  "version": "0.1.0",
+  "description": "Offline browser plugin: import an Interior Shop Order Drawing (SOD) PDF and generate a structured Material Indent for RISE ERP (Phase 1).",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "node --test",
+    "serve": "python3 -m http.server 8080"
+  },
+  "keywords": ["rise", "erp", "pdf", "pdfjs", "material-indent", "interior", "offline"],
+  "license": "MIT"
+}
