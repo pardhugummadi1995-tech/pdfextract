@@ -50,6 +50,8 @@ class IndentLine:
     cabinets: list[str] = field(default_factory=list)
     pages: list[int] = field(default_factory=list)
     flags: list[str] = field(default_factory=list)
+    reviewed: bool = False
+    review_notes: str = ""
 
 
 @dataclass
@@ -58,6 +60,8 @@ class RoomSummaryRow:
     cabinets: int
     hardware_lines: int
     estimated_inventory: float
+    electrical_points: int = 0
+    plumbing_points: int = 0
 
 
 @dataclass
@@ -67,6 +71,8 @@ class CategoryCounts:
     hardware_types: int
     hardware_qty: float
     finish_codes: int
+    electrical_points: int = 0
+    plumbing_points: int = 0
 
 
 @dataclass
@@ -82,3 +88,4 @@ class ProjectModel:
     finish_legend: dict = field(default_factory=dict)
     warnings: list[str] = field(default_factory=list)
     unknown_items: list[IndentLine] = field(default_factory=list)
+    reviewed: bool = False

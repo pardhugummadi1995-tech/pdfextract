@@ -26,9 +26,17 @@ def build_project(pages, source: str | None = None) -> ProjectModel:
     """Build the full project model from per-page extracts."""
     finish_legend: dict = {}
     raw: list[Cabinet] = []
+    # Electrical/plumbing points are counted per page (a page = one drawing) and
+    # summed per room; the same code on two sheets is two physical points.
+    elec_by_room: dict[str, int] = {}
+    plumb_by_room: dict[str, int] = {}
     for page in pages:
         finish_legend.update(page.finish_legend or {})
         room = page.room or "Unassigned"
+        if page.electrical_points:
+            elec_by_room[room] = elec_by_room.get(room, 0) + len(page.electrical_points)
+        if page.plumbing_points:
+            plumb_by_room[room] = plumb_by_room.get(room, 0) + len(page.plumbing_points)
         for row in page.cabinet_rows:
             cab = Cabinet(
                 code=row["code"],
@@ -57,16 +65,18 @@ def build_project(pages, source: str | None = None) -> ProjectModel:
     material_indent = _build_indent(cabinets)
     material_indent += _build_finish_indent(cabinets, finish_legend)
 
-    room_summary = _build_room_summary(cabinets)
+    room_summary = _build_room_summary(cabinets, elec_by_room, plumb_by_room)
     hardware_qty = sum(
         (line.total_qty or 0) for line in material_indent if line.category == "Hardware"
     )
     category_counts = CategoryCounts(
-        rooms=len(room_summary),
+        rooms=len({r.room for r in room_summary}),
         cabinets=len(cabinets),
         hardware_types=len([m for m in material_indent if m.category == "Hardware"]),
         hardware_qty=hardware_qty,
         finish_codes=len([m for m in material_indent if m.category == "Finish"]),
+        electrical_points=sum(elec_by_room.values()),
+        plumbing_points=sum(plumb_by_room.values()),
     )
 
     warnings = []
@@ -159,7 +169,7 @@ def _build_finish_indent(cabinets, finish_legend) -> list[IndentLine]:
     return out
 
 
-def _build_room_summary(cabinets) -> list[RoomSummaryRow]:
+def _build_room_summary(cabinets, elec_by_room, plumb_by_room) -> list[RoomSummaryRow]:
     rooms: dict[str, RoomSummaryRow] = {}
     for cab in cabinets:
         r = rooms.get(cab.room)
@@ -169,4 +179,13 @@ def _build_room_summary(cabinets) -> list[RoomSummaryRow]:
         r.cabinets += 1
         r.hardware_lines += len(cab.hardware)
         r.estimated_inventory += sum((h.qty or 0) for h in cab.hardware)
+    # Include rooms that only appear on service sheets (no cabinet schedule).
+    for room in set(elec_by_room) | set(plumb_by_room):
+        if room not in rooms:
+            rooms[room] = RoomSummaryRow(
+                room=room, cabinets=0, hardware_lines=0, estimated_inventory=0
+            )
+    for room, r in rooms.items():
+        r.electrical_points = elec_by_room.get(room, 0)
+        r.plumbing_points = plumb_by_room.get(room, 0)
     return sorted(rooms.values(), key=lambda x: x.room)

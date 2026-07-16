@@ -83,6 +83,25 @@ PROJECT = {
 }
 
 
+LEGEND_LINES = [
+    "Existing Electrical - EE    Existing Plumbing - EP",
+    "New Electrical - NE    New Plumbing - NP",
+    "Shifted Electrical - SE    Shifted Plumbing - SP",
+]
+
+
+def _add_electrical_sheet(flow, room, elec_codes, plumb_codes):
+    """A minimal electrical/plumbing sheet: title block, point markers, legend."""
+    title = Table([[f"DRAWING NAME:\n{room}\nELECTRICAL"]], colWidths=[520])
+    title.setStyle(TableStyle([("BOX", (0, 0), (-1, -1), 0.5, colors.grey), ("FONTSIZE", (0, 0), (-1, -1), 9)]))
+    flow.append(title)
+    flow.append(Spacer(1, 6))
+    flow.append(Paragraph(" ".join(elec_codes + plumb_codes), CELL))
+    flow.append(Spacer(1, 6))
+    for line in LEGEND_LINES:
+        flow.append(Paragraph(line, CELL))
+
+
 def build(path: str) -> None:
     doc = SimpleDocTemplate(path, pagesize=A4, title="Shop Order Drawing")
     flow = []
@@ -113,6 +132,11 @@ def build(path: str) -> None:
             )
         )
         flow.append(t)
+
+    # A Kitchen electrical/plumbing sheet: 3 electrical + 2 plumbing points.
+    flow.append(PageBreak())
+    _add_electrical_sheet(flow, "KITCHEN", ["EE1", "EE2", "NE1"], ["EP1", "NP1"])
+
     doc.build(flow)
     print(f"wrote {path}")
 

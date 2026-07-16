@@ -32,6 +32,12 @@ def test_end_to_end_sample(sample_sod_pdf):
     handles = next(m for m in model.material_indent if "Handles" in m.description)
     assert handles.total_qty is None and handles.flags
 
+    # Electrical / plumbing points from the Kitchen electrical sheet.
+    assert model.category_counts.electrical_points == 3  # EE1, EE2, NE1
+    assert model.category_counts.plumbing_points == 2  # EP1, NP1
+    kitchen = next(r for r in model.room_summary if r.room == "Kitchen")
+    assert kitchen.electrical_points == 3
+
     # Exports render without error.
     assert "SKU Code" in indent_to_csv(model)
     assert '"category": "Hardware"' in to_json(model) or '"category":"Hardware"' in to_json(model)

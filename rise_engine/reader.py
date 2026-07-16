@@ -13,6 +13,7 @@ from dataclasses import dataclass, field
 import pdfplumber
 
 from .schedule import detect_finish_legend, detect_room, extract_cabinet_rows
+from .services import detect_service_points
 
 
 @dataclass
@@ -21,6 +22,8 @@ class PageExtract:
     room: str | None = None
     finish_legend: dict = field(default_factory=dict)
     cabinet_rows: list[dict] = field(default_factory=list)
+    electrical_points: set = field(default_factory=set)
+    plumbing_points: set = field(default_factory=set)
 
 
 def read_sod(path: str) -> list[PageExtract]:
@@ -36,12 +39,15 @@ def read_sod(path: str) -> list[PageExtract]:
             cabinet_rows = []
             for table in tables:
                 cabinet_rows.extend(extract_cabinet_rows(table))
+            electrical, plumbing = detect_service_points(text)
             pages.append(
                 PageExtract(
                     page_number=page_number,
                     room=detect_room(tables, text),
                     finish_legend=detect_finish_legend(text),
                     cabinet_rows=cabinet_rows,
+                    electrical_points=electrical,
+                    plumbing_points=plumbing,
                 )
             )
     return pages

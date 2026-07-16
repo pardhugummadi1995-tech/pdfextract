@@ -29,6 +29,8 @@ def render_html(model: ProjectModel) -> str:
             ("Hardware Types", counts.hardware_types),
             ("Hardware Qty", counts.hardware_qty),
             ("Finish Codes", counts.finish_codes),
+            ("Electrical Points", counts.electrical_points),
+            ("Plumbing Points", counts.plumbing_points),
         ]:
             stat_cards += f'<div class="stat"><div class="n">{_esc(value)}</div><div class="l">{_esc(label)}</div></div>'
 
@@ -51,7 +53,8 @@ def render_html(model: ProjectModel) -> str:
         for c in model.cabinets
     ]
     room_rows = [
-        [r.room, r.cabinets, r.hardware_lines, r.estimated_inventory] for r in model.room_summary
+        [r.room, r.cabinets, r.hardware_lines, r.estimated_inventory, r.electrical_points, r.plumbing_points]
+        for r in model.room_summary
     ]
     warn_list = "".join(f"<li>{_esc(w)}</li>" for w in model.warnings) or "<li>None</li>"
 
@@ -82,7 +85,7 @@ def render_html(model: ProjectModel) -> str:
  <section><h2>Cabinets &amp; Dimensions</h2>{_table(
     ["Cabinet","Room","W x D x H","Carcass","Shutter","Page"], cab_rows)}</section>
  <section><h2>Room Summary</h2>{_table(
-    ["Room","No. of Cabinets","Hardware Items","Estimated Inventory"], room_rows)}</section>
+    ["Room","No. of Cabinets","Hardware Items","Estimated Inventory","Electrical Pts","Plumbing Pts"], room_rows)}</section>
  <section class="warn"><h2>Validation &amp; Warnings ({len(model.warnings)})</h2><ul>{warn_list}</ul></section>
 </main></body></html>"""
 

@@ -21,6 +21,20 @@ INDENT_HEADER = [
     "Flags",
 ]
 
+REVIEW_HEADER = [
+    "SKU Code",
+    "Item Description",
+    "Category",
+    "Room(s)",
+    "Cabinet(s)",
+    "Extracted Qty",
+    "UOM",
+    "Source Page",
+    "Flags",
+    "Approved Qty",
+    "Reviewer Notes",
+]
+
 
 def _indent_row(line):
     return [
@@ -51,6 +65,38 @@ def indent_to_csv(model: ProjectModel) -> str:
     for line in model.material_indent:
         writer.writerow(_indent_row(line))
     return buf.getvalue()
+
+
+def review_to_csv(model: ProjectModel) -> str:
+    """Editable review sheet: an "Approved Qty" column is pre-filled with the
+    extracted quantity (blank when it could not be read) for a human to confirm
+    or correct before final export."""
+    buf = io.StringIO()
+    writer = csv.writer(buf, lineterminator="\n")
+    writer.writerow(REVIEW_HEADER)
+    for line in model.material_indent:
+        extracted = "" if line.total_qty is None else line.total_qty
+        writer.writerow(
+            [
+                line.sku_code,
+                line.description,
+                line.category,
+                ", ".join(line.rooms),
+                ", ".join(line.cabinets),
+                extracted,
+                line.uom or "",
+                ", ".join(str(p) for p in line.pages),
+                ", ".join(line.flags),
+                extracted,  # Approved Qty (edit me)
+                "",  # Reviewer Notes
+            ]
+        )
+    return buf.getvalue()
+
+
+def write_review_csv(model: ProjectModel, path: str) -> None:
+    with open(path, "w", encoding="utf-8", newline="") as fh:
+        fh.write(review_to_csv(model))
 
 
 def cabinets_to_csv(model: ProjectModel) -> str:
@@ -93,9 +139,27 @@ def write_excel(model: ProjectModel, path: str) -> None:
         cab.append([c.code, c.room, c.width, c.depth, c.height, c.carcass, c.shutter, c.page])
 
     rs = wb.create_sheet("Room Summary")
-    rs.append(["Room", "No. of Cabinets", "Hardware Items", "Estimated Inventory"])
+    rs.append(
+        [
+            "Room",
+            "No. of Cabinets",
+            "Hardware Items",
+            "Estimated Inventory",
+            "Electrical Points",
+            "Plumbing Points",
+        ]
+    )
     for r in model.room_summary:
-        rs.append([r.room, r.cabinets, r.hardware_lines, r.estimated_inventory])
+        rs.append(
+            [
+                r.room,
+                r.cabinets,
+                r.hardware_lines,
+                r.estimated_inventory,
+                r.electrical_points,
+                r.plumbing_points,
+            ]
+        )
 
     cc = wb.create_sheet("Category Counts")
     if model.category_counts:
@@ -107,6 +171,8 @@ def write_excel(model: ProjectModel, path: str) -> None:
             ("Hardware Types", counts.hardware_types),
             ("Hardware Qty", counts.hardware_qty),
             ("Finish Codes", counts.finish_codes),
+            ("Electrical Points", counts.electrical_points),
+            ("Plumbing Points", counts.plumbing_points),
         ]:
             cc.append([label, value])
 
