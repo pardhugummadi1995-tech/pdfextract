@@ -1,0 +1,4 @@
+# Runtime dependencies for the RISE Project Import Engine.
+# Fully offline: reads the PDF locally, no cloud / OCR / AI.
+pdfplumber>=0.11.0
+openpyxl>=3.1

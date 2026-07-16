@@ -1,103 +1,78 @@
 # RISE Project Import Engine (Phase 1)
 
-A **standalone, fully-offline** browser application that imports an Interior
-**Shop Order Drawing (SOD) PDF**, understands the project structure, extracts the
-inventory (hardware) requirements, and generates an ERP-ready **Material Indent**
-for RISE.
+Import an Interior **Shop Order Drawing (SOD) PDF**, understand the project
+structure, extract the inventory requirement, and generate a structured
+**Material Indent** ready for RISE ERP.
 
-- **No backend. No OCR. No AI/LLM.** Pure `HTML` + `CSS` + `JavaScript` + `PDF.js`.
-- PDF.js is **vendored locally** (`vendor/`) so the app runs with zero network access.
+**Fully offline — no cloud, no OCR, no AI/LLM.** Real SODs store the per-cabinet
+requirement inside **ruled "Hardware Details" schedule tables**, so the engine
+uses [`pdfplumber`](https://github.com/jsvine/pdfplumber) lattice table
+extraction (the PDF's own border lines) to read them reliably.
 
-> Phase 1 scope: read the PDF → understand the project → extract inventory →
-> generate a structured Material Indent. It does **not** integrate with
-> Procurement, Inventory Master, Finance or AI. The output is clean structured
-> data designed to feed those later phases.
+> **Note on Phase 1 technology.** The original brief targeted a pure
+> browser/PDF.js tool. Real customer SODs turned out to be CAD-exported drawing
+> sets whose data lives in bordered tables mixed with heavy line-art; robust
+> extraction requires true lattice table detection, which `pdfplumber` does
+> reliably and a hand-rolled browser parser did not. The engine therefore runs
+> as a small **local, offline Python tool** (no server, no network). It still
+> produces a browsable **HTML report** plus JSON/CSV/Excel exports.
 
-## Run it
-
-Because the app uses ES modules and a PDF.js web worker, serve it over HTTP
-(opening `index.html` via `file://` will not work). Any static server works:
+## Install
 
 ```bash
-python3 -m http.server 8080
-# then open http://localhost:8080/
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements-dev.txt      # runtime + test deps
+# runtime only: pip install -r requirements.txt   (or: pip install -e .)
 ```
 
-Upload a SOD PDF (drag & drop or Browse). A sample is provided at
-`samples/sample-sod.pdf` (regenerate with `python samples/generate_sample.py`).
+## Use
 
-## Two outputs
+```bash
+python -m rise_engine path/to/SOD.pdf                 # writes JSON/CSV/XLSX/HTML to ./out
+python -m rise_engine path/to/SOD.pdf -o build        # choose output dir
+python -m rise_engine path/to/SOD.pdf --formats csv html
+python -m rise_engine path/to/SOD.pdf --print         # also print indent CSV to stdout
+```
 
-1. **Project Structure** — the digital representation of the design:
+Open the generated `*-report.html` in any browser for the preview.
 
-   ```
-   Aurora Residence
-   ├── Kitchen
-   │   ├── B1  (600 x 580 x 850)
-   │   ├── B2  (900 x 580 x 850)
-   │   └── W1  (600 x 320 x 700)
-   ├── Living
-   │   └── TV1 (1800 x 450 x 600)
-   └── Master Bedroom
-       ├── WR1 (2100 x 600 x 2400)
-       └── WR2
-   ```
+## Outputs (the expected schema)
 
-2. **Material Indent** — the operational document (grouped, duplicates summed):
+1. **Material Indent** — `SKU Code, Item Description, Category, Room(s),
+   Cabinet(s), Total Qty, UOM, Source Page(s), Flags`. Duplicate hardware is
+   grouped and summed across cabinets/rooms; auto SKU codes (`HW-001`, `FIN-C1`).
+2. **Cabinets & dimensions** — code, room, W×D×H, carcass/shutter finish, page.
+3. **Room summary** — cabinets, hardware lines, estimated inventory per room.
+4. **Category counts** — rooms, cabinets, hardware types, hardware qty, finishes.
 
-   | Item Code | Description | Total Qty | UOM | Source Rooms | Source Cabinets |
-   | --------- | ----------- | --------- | --- | ------------ | --------------- |
-   | AUTO-001  | Hettich 105 Hinge | 34 | Nos | Kitchen, Master Bedroom | B1, B2, W1, WR1, WR2 |
-
-Export as **JSON**, **CSV**, or **Excel**.
-
-## Workflow
-
-Upload → Parse (PDF.js: text, coordinates, page, font size, bounding boxes) →
-Detect project info → Detect rooms → Detect cabinets → Extract dimensions →
-Extract hardware → Extract finish codes → Build inventory requirement →
-Generate Material Indent → Preview → Export.
-
-## Module structure
-
-Each module is independent and reusable. The detectors/builders are **pure**
-(no DOM, no PDF.js) so they can be unit-tested in Node.
-
-| Module | File | Responsibility |
-| ------ | ---- | -------------- |
-| Uploader | `src/modules/uploader.js` | drag & drop / browse / read file |
-| PDF Reader | `src/modules/pdfReader.js` | PDF.js text + coordinates (only PDF.js dependency) |
-| Parser | `src/modules/parser.js` | reconstruct positioned lines |
-| Project Detector | `src/modules/projectDetector.js` | project/client/drawing/rev/date |
-| Room Detector | `src/modules/roomDetector.js` | room headers |
-| Cabinet Detector | `src/modules/cabinetDetector.js` | cabinet codes |
-| Dimension Detector | `src/modules/dimensionDetector.js` | W×D×H |
-| Hardware Extractor | `src/modules/hardwareExtractor.js` | items, qty, unit, flags |
-| Finish Detector | `src/modules/finishDetector.js` | carcass/shutter/laminate |
-| Inventory Builder | `src/modules/inventoryBuilder.js` | per-cabinet inventory rows |
-| Indent Generator | `src/modules/indentGenerator.js` | grouped indent + AUTO codes |
-| Exporter | `src/modules/exporter.js` | JSON / CSV / Excel |
-| Pipeline | `src/pipeline.js` | composes detectors into the full model |
-
-## Validation & error handling
-
-The sidebar reports Rooms/Cabinets/Inventory detected, Duplicates merged,
-Unknown items, plus warnings and errors:
+## Error handling / flags
 
 - Missing dimensions → cabinet flagged **Dimension Missing**.
 - Missing quantity → item flagged **Quantity Verification Required**.
-- Unidentifiable hardware → categorised as **Unknown**.
+- Handles/appliances noted "In Client Scope" → flagged **Client Scope**.
+
+## Modules (independent & reusable)
+
+| Module | Responsibility |
+| ------ | -------------- |
+| `rise_engine/reader.py` | PDF Reader — pdfplumber tables/text per page |
+| `rise_engine/schedule.py` | locate schedule table, map columns, room & finishes |
+| `rise_engine/hardware.py` | parse the numbered hardware cell → items + qty/unit |
+| `rise_engine/pipeline.py` | Inventory Builder + Indent Generator (aggregation) |
+| `rise_engine/exporter.py` | JSON / CSV / Excel export |
+| `rise_engine/report.py` | offline HTML preview report |
+| `rise_engine/cli.py` | command-line entry point |
 
 ## Tests
 
-Pure modules are covered by Node's built-in test runner:
-
 ```bash
-npm test          # node --test
+pytest -q     # generates a synthetic ruled-table SOD fixture via reportlab
+ruff check rise_engine tests
 ```
 
-## Future integration (not implemented)
+## Future integration (not implemented — Phase 1)
 
-The Material Indent is intentionally clean/structured so later phases can
-validate against Inventory Master, create missing SKUs, compare stock, raise
-Purchase Requisitions, and sync with Procurement/Finance/AI.
+The Material Indent is clean/structured so later phases can validate against
+Inventory Master, create missing SKUs, compare stock, raise Purchase
+Requisitions, and sync with Procurement/Finance/AI.

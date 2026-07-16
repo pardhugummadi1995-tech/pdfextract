@@ -1,11 +1,22 @@
-# Node
-node_modules/
-
-# Python (only used by the optional sample-fixture generator)
+# Python
 .venv/
 venv/
 __pycache__/
 *.py[cod]
+*.egg-info/
+build/
+dist/
+.eggs/
+
+# Test / tooling caches
+.pytest_cache/
+.ruff_cache/
+.coverage
+
+# Engine output + local customer files (never commit customer SODs)
+out/
+*.pdf
+!samples/**/*.pdf
 
 # Editor / OS
 .DS_Store

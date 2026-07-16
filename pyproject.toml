@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rise-project-import-engine"
+version = "1.0.0"
+description = "Import an Interior Shop Order Drawing (SOD) PDF and generate a structured Material Indent for RISE ERP (Phase 1, offline)."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+dependencies = [
+    "pdfplumber>=0.11.0",
+    "openpyxl>=3.1",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "ruff>=0.5", "reportlab>=4.0"]
+
+[project.scripts]
+rise-import = "rise_engine.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["rise_engine*"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py39"
+extend-exclude = ["samples"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "UP", "B"]
+
+[tool.ruff.lint.per-file-ignores]
+# report.py is an HTML/CSS template with intentionally long style lines.
+"rise_engine/report.py" = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
