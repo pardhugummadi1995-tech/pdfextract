@@ -1,5 +1,19 @@
 # pdfextract
 
+> This repository contains two independent deliverables:
+>
+> 1. **`pdfextract`** (below) — a Python package/CLI that extracts tabular data
+>    from PDFs into CSV/TSV/JSON/Markdown, with an inventory breakdown by
+>    floor/room.
+> 2. **[`rise-import-engine/`](rise-import-engine/README.md)** — a standalone,
+>    fully-offline browser app (HTML/CSS/JS + PDF.js) that imports an Interior
+>    Shop Order Drawing (SOD) PDF and generates an ERP-ready Material Indent
+>    (RISE Project Import Engine, Phase 1).
+
+---
+
+## pdfextract (Python package)
+
 A plugin that **extracts tabular data from PDF files** and converts it into a
 specific tabular format (CSV, TSV, JSON, or Markdown).
 
